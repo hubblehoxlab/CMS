@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Question Bank CMS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --primary:#3F41D1;--primary-600:#4B4DD4;--primary-400:#7B7FDE;--primary-200:#CFD5F1;--primary-100:#E1E8F5;--primary-050:#EBF2FF;--on-primary:#FFFFFF;
+    --accent:#E697AB;--accent-200:#E8ADBE;--accent-050:#EBDEE5;--on-accent:#310000;
+    --surface-1:#F7F7F7;--surface-0:#FFFFFF;--surface-2:#F0F2F4;
+    --success:#06C270;--success-700:#008A2E;--success-050:#DCFCE7;
+    --danger:#E6393E;--danger-700:#9F0712;--danger-050:#FFE2E2;--warning:#D17E3F;
+    --text-1:#212121;--text-2:#666666;--text-3:#A3A3A3;--line:#E0E0E0;--line-2:#EBEBEB;--field:#BDBDBD;
+    --radius:10px;--radius-sm:7px;--shadow:0 1px 2px rgba(33,33,33,.04),0 6px 20px rgba(33,33,33,.06);
+    --sidebar:250px;--header:60px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--text-1);background:var(--surface-2);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+  button{font-family:inherit}::selection{background:var(--primary-100)}
+
+  #login{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(1100px 600px at 15% -10%,var(--primary-050),transparent 60%),radial-gradient(900px 500px at 110% 120%,var(--accent-050),transparent 55%),var(--surface-1)}
+  .login-card{width:390px;background:var(--surface-0);border:1px solid var(--line);border-radius:16px;padding:34px 32px;box-shadow:var(--shadow)}
+  .brand-row{display:flex;align-items:center;gap:11px;margin-bottom:26px}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:800;font-size:14px;letter-spacing:.5px;overflow:hidden;flex:none}
+  .brand-name{font-weight:700;font-size:15px}.brand-sub{color:var(--text-3);font-size:11.5px;letter-spacing:.4px;text-transform:uppercase}
+  .login-card h1{font-size:19px;margin:0 0 4px}.login-card p.lede{color:var(--text-2);margin:0 0 22px;font-size:13px}
+  .field-label{display:block;font-size:12px;color:var(--text-2);margin:14px 0 6px;font-weight:600}
+  .input{width:100%;height:42px;padding:0 12px;border:1px solid var(--field);border-radius:var(--radius-sm);background:var(--surface-0);font-size:14px;color:var(--text-1);outline:none;transition:border-color .15s,box-shadow .15s}
+  .input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-100)}
+  textarea.input{height:auto;padding:10px 12px;resize:vertical;min-height:80px}
+  select.input,select.select-min{cursor:pointer}
+  select.input{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text-3) 50%),linear-gradient(135deg,var(--text-3) 50%,transparent 50%);background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  .btn{height:42px;padding:0 18px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:600;border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:8px;justify-content:center;transition:background .15s,border-color .15s,color .15s,transform .05s;white-space:nowrap}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--primary);color:var(--on-primary)}.btn-primary:hover{background:var(--primary-600)}
+  .btn-ghost{background:var(--surface-0);color:var(--text-1);border-color:var(--field)}.btn-ghost:hover{border-color:var(--primary-400);color:var(--primary)}
+  .btn-soft{background:var(--primary-050);color:var(--primary);border-color:var(--primary-100)}.btn-soft:hover{background:var(--primary-100)}
+  .btn-danger{background:var(--surface-0);color:var(--danger-700);border-color:var(--danger-050)}.btn-danger:hover{background:var(--danger-050)}
+  .btn-success{background:var(--success-050);color:var(--success-700);border-color:var(--success-050)}.btn-success:hover{background:#c9f7dd}
+  .btn-block{width:100%;margin-top:22px}.btn-sm{height:32px;padding:0 12px;font-size:12.5px;border-radius:6px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .hint{font-size:11.5px;color:var(--text-3);margin-top:6px}.req{color:var(--danger-700)}
+
+  #app{display:none}#app.on{display:block}
+  .sidebar{position:fixed;top:0;left:0;width:var(--sidebar);height:100vh;background:var(--surface-0);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:20;transition:width .22s ease,transform .22s ease;overflow:visible}
+  .side-brand{display:flex;align-items:center;gap:11px;padding:0 20px;height:var(--header);border-bottom:1px solid var(--line-2)}
+  .nav{padding:14px 12px;flex:1;overflow:visible}
+  .nav-group{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3);padding:14px 12px 6px;font-weight:700;white-space:nowrap}
+  .nav-item{position:relative;display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:9px 12px;border-radius:9px;border:none;background:transparent;cursor:pointer;color:var(--text-2);font-size:13.5px;font-weight:500;margin-bottom:2px;white-space:nowrap}
+  .nav-item:hover{background:var(--surface-1);color:var(--text-1)}
+  .nav-item.active{background:var(--primary-050);color:var(--primary);font-weight:700}
+  .ico{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--text-2);background:var(--surface-2);flex:none}
+  .ico svg{width:17px;height:17px}
+  .nav-item.active .ico{background:var(--primary);color:#fff}
+  .tip{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);background:var(--text-1);color:#fff;font-size:12px;font-weight:600;padding:6px 10px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .14s;z-index:60;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+  .tip::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%) rotate(45deg);width:8px;height:8px;background:var(--text-1)}
+  #app:not(.collapsed) .tip{display:none}
+  .collapsed .nav-item:hover .tip{opacity:1}
+  .side-collapse{position:fixed;top:74px;left:calc(var(--sidebar) - 13px);width:26px;height:26px;border-radius:50%;background:var(--surface-0);border:1px solid var(--line);box-shadow:0 3px 10px rgba(33,33,33,.12);display:grid;place-items:center;cursor:pointer;color:var(--text-2);z-index:30;transition:left .22s ease,color .15s,border-color .15s}
+  .side-collapse:hover{color:var(--primary);border-color:var(--primary-400)}
+  .side-collapse svg{width:13px;height:13px;transition:transform .22s ease}
+  #app.collapsed .side-collapse svg{transform:rotate(180deg)}
+  .nav-backdrop{display:none}
+  .nav-badge{margin-left:auto;background:var(--accent);color:var(--on-accent);font-size:10.5px;font-weight:800;border-radius:10px;padding:1px 7px}.nav-badge.zero{display:none}
+  .side-foot{border-top:1px solid var(--line-2);padding:12px}
+  .user-chip{display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px}
+  .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary-100);color:var(--primary);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none;overflow:hidden}
+  .user-chip .nm{font-size:12.5px;font-weight:700;line-height:1.2;white-space:nowrap}.user-chip .rl{font-size:11px;color:var(--text-3)}
+  .signout{width:100%;margin-top:8px}
+  #app.collapsed{--sidebar:76px}
+  .collapsed .brand-name,.collapsed .brand-sub,.collapsed .nav-group,.collapsed .nav-item .lbl,.collapsed .nav-badge,.collapsed .user-chip .u-text,.collapsed .signout .lbl{display:none}
+  .collapsed .side-brand{justify-content:center;padding:0}
+  .collapsed .nav-item{justify-content:center;padding:10px 0}
+  .collapsed .user-chip{justify-content:center;padding:8px 0}
+  .collapsed .signout{width:44px;margin:8px auto 0;padding:0}
+
+  .main{margin-left:var(--sidebar);transition:margin-left .22s ease}
+  .topbar{position:sticky;top:0;z-index:15;height:var(--header);background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 24px}
+  .side-toggle{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface-0);cursor:pointer;font-size:15px;color:var(--text-2);flex:none}
+  .side-toggle:hover{border-color:var(--primary-400);color:var(--primary)}
+  .crumbs{font-size:12.5px;color:var(--text-3)}.crumbs b{color:var(--text-1);font-weight:700}
+  .ctx-select{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .ctx-select select{height:34px;border:1px solid var(--line);border-radius:8px;padding:0 30px 0 10px;font-size:12.5px;background:var(--surface-0);appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text-3) 50%),linear-gradient(135deg,var(--text-3) 50%,transparent 50%);background-position:calc(100% - 14px) 15px,calc(100% - 9px) 15px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer;font-weight:600;color:var(--text-1);text-transform:none;letter-spacing:0}
+  .bell{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface-0);position:relative;cursor:pointer;flex:none}
+  .bell::after{content:"";position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
+  .bell::before{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;border:1.6px solid var(--text-2);border-radius:6px 6px 3px 3px}
+
+  .content{padding:26px 28px 60px;max-width:1440px}
+  .view{display:none;animation:fade .25s ease}.view.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .page-head{display:flex;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+  .page-head h2{font-size:22px;margin:0 0 3px}.page-head p{margin:0;color:var(--text-2);font-size:13px}
+  .head-actions{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+  .card{background:var(--surface-0);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+  .greet{display:flex;align-items:center;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+  .greet .g-emoji{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--primary-600));color:#fff;display:grid;place-items:center;font-size:22px;flex:none;overflow:hidden}
+  .greet h2{margin:0;font-size:22px}.greet p{margin:2px 0 0;color:var(--text-2);font-size:13px}
+  .greet .g-date{margin-left:auto;font-size:12.5px;color:var(--text-3);background:var(--surface-0);border:1px solid var(--line);border-radius:20px;padding:8px 14px}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .kpi{display:flex;align-items:center;gap:14px;padding:18px 20px}
+  .kpi .tile{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;font-size:20px;flex:none;color:#fff}
+  .tile-primary{background:linear-gradient(135deg,var(--primary),var(--primary-600))}
+  .tile-ink{background:linear-gradient(135deg,#2b2b34,#4a4a58)}
+  .tile-accent{background:linear-gradient(135deg,var(--accent),#d97a95)}
+  .tile-success{background:linear-gradient(135deg,var(--success),var(--success-700))}
+  .kpi .k-num{font-size:26px;font-weight:800;line-height:1;letter-spacing:-.5px}
+  .kpi .k-lbl{font-size:12px;color:var(--text-2);font-weight:600;margin-top:4px}
+
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:16px;margin-top:16px}
+  #charts-grid.solo{grid-template-columns:1fr}
+  .chart-card{padding:18px 20px}
+  .chart-card h3{margin:0 0 3px;font-size:15px}
+  .chart-card .csub{font-size:12px;color:var(--text-3);margin-bottom:16px}
+  .donut-wrap{display:flex;align-items:center;gap:20px}
+  .donut-center-big{font-size:22px;font-weight:800;fill:var(--text-1)}
+  .donut-center-small{font-size:11px;fill:var(--text-3);font-weight:600}
+  .legend{display:flex;flex-direction:column;gap:10px;flex:1}
+  .legend .li{display:flex;align-items:center;gap:9px;font-size:13px}
+  .legend .sw{width:11px;height:11px;border-radius:3px;flex:none}
+  .legend .lv{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text-2)}
+  .bars{display:flex;flex-direction:column;gap:14px}
+  .bars .brow .bl{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px}
+  .bars .brow .bl b{font-variant-numeric:tabular-nums}
+  .bars .btrack{height:9px;border-radius:6px;background:var(--surface-2);overflow:hidden}
+  .bars .btrack>i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--primary-400),var(--primary))}
+  .chart-empty{color:var(--text-3);font-size:13px;text-align:center;padding:24px 0}
+
+  .two-col{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-top:16px}
+  .panel-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line-2)}
+  .panel-head h3{margin:0;font-size:15px}
+  .panel-body{padding:8px 20px 18px}
+  .activity{list-style:none;margin:0;padding:0}
+  .activity li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-2)}.activity li:last-child{border-bottom:none}
+  .activity .tick{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+  .activity .txt{font-size:13px}.activity .meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+
+  .subtabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;margin-bottom:22px;border-bottom:1px solid var(--line)}
+  .subtab{position:relative;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid var(--line);background:var(--surface-0);color:var(--text-2);font-weight:600;font-size:13px;padding:10px 15px;border-radius:10px;cursor:pointer;box-shadow:var(--shadow)}
+  .subtab:hover{border-color:var(--primary-400);color:var(--primary)}
+  .subtab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+  .st-badge{background:var(--surface-2);color:var(--text-2);font-size:11px;font-weight:800;border-radius:10px;padding:1px 7px;min-width:20px;text-align:center}
+  .subtab.active .st-badge{background:rgba(255,255,255,.25);color:#fff}
+  .msubview{display:none}.msubview.on{display:block;animation:fade .2s ease}
+  .sub-head{margin-bottom:18px}.sub-head h3{font-size:17px;margin:0 0 3px}.sub-head p{margin:0;color:var(--text-2);font-size:13px}
+  .master-add{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--surface-0);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;margin-bottom:16px}
+  .master-add .fld{display:flex;flex-direction:column;gap:6px}
+  .master-add .fld label{font-size:12px;color:var(--text-2);font-weight:600}
+  .master-add .fld.grow{flex:1;min-width:200px}
+  .master-add .input,.master-add select.input{height:42px;min-width:150px}
+  .ctx-banner{display:flex;align-items:center;gap:10px;background:var(--primary-050);border:1px solid var(--primary-100);color:var(--primary);border-radius:var(--radius);padding:10px 14px;font-size:12.5px;font-weight:600;margin-bottom:16px}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .tb-search{flex:1;min-width:220px;height:40px;border:1px solid var(--line);border-radius:9px;padding:0 14px;background:var(--surface-0);font-size:13px;outline:none}
+  .tb-search:focus{border-color:var(--primary-400)}
+  .select-min{height:40px;border:1px solid var(--line);border-radius:9px;padding:0 34px 0 12px;background:var(--surface-0);font-size:13px;color:var(--text-1);appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text-3) 50%),linear-gradient(135deg,var(--text-3) 50%,transparent 50%);background-position:calc(100% - 16px) 17px,calc(100% - 11px) 17px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface-0);box-shadow:var(--shadow)}
+  table{width:100%;border-collapse:collapse;min-width:640px}
+  thead th{text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);font-weight:700;padding:13px 16px;background:var(--surface-1);border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:14px 16px;border-bottom:1px solid var(--line-2);font-size:13px;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}tbody tr:hover{background:var(--primary-050)}tbody tr.empty-tr:hover{background:transparent}
+  td .qname{font-weight:600;max-width:520px;display:block}td .sub{color:var(--text-3);font-size:11.5px}
+  .num-cell{font-variant-numeric:tabular-nums;font-weight:600}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .b-success{background:var(--success-050);color:var(--success-700)}.b-warn{background:#FBEBDD;color:var(--warning)}
+  .b-primary{background:var(--primary-050);color:var(--primary)}.b-accent{background:var(--accent-050);color:var(--on-accent)}.b-danger{background:var(--danger-050);color:var(--danger-700)}.b-neutral{background:var(--surface-2);color:var(--text-2)}
+  .badge .d{width:6px;height:6px;border-radius:50%}
+  .dg-success{background:var(--success)}.dg-warn{background:var(--warning)}.dg-primary{background:var(--primary)}.dg-accent{background:var(--accent)}.dg-danger{background:var(--danger)}
+  .row-actions{display:flex;gap:6px;justify-content:flex-end}
+  .icon-btn{height:30px;padding:0 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface-0);font-size:12px;color:var(--text-2);cursor:pointer;font-weight:600}
+  .icon-btn:hover{border-color:var(--primary-400);color:var(--primary);background:var(--primary-050)}
+  .icon-btn.del:hover{border-color:var(--danger-050);color:var(--danger-700);background:var(--danger-050)}
+  .dots{width:34px;height:30px;padding:0;font-size:17px;font-weight:800}
+  .count-line{padding:14px 4px;color:var(--text-3);font-size:12.5px}
+  .empty-state{padding:44px 24px;text-align:center}
+  .empty-state .ill{width:56px;height:56px;border-radius:14px;border:2px dashed var(--field);margin:0 auto 14px}
+  .empty-state h4{margin:0 0 6px;font-size:15px;color:var(--text-1)}.empty-state p{margin:0 0 16px;color:var(--text-3);font-size:13px}
+  .logo-thumb{width:36px;height:36px;border-radius:9px;object-fit:cover;background:var(--primary-100);color:var(--primary);display:grid;place-items:center;font-weight:800;font-size:12px;overflow:hidden}
+  .logo-thumb img{width:100%;height:100%;object-fit:cover}
+
+  .menu-wrap{position:relative;display:inline-block}
+  .menu{position:fixed;min-width:180px;background:var(--surface-0);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 34px rgba(33,33,33,.16);padding:6px;display:none;z-index:40}
+  .menu.open{display:block}
+  .menu button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:none;background:transparent;padding:9px 10px;border-radius:7px;font-size:13px;color:var(--text-1);cursor:pointer;font-weight:500}
+  .menu button:hover{background:var(--primary-050);color:var(--primary)}
+  .menu .mk{width:6px;height:6px;border-radius:50%;background:var(--primary)}
+
+  .method-tabs{display:inline-flex;gap:6px;background:var(--surface-2);padding:5px;border-radius:10px;margin-bottom:18px}
+  .method-tab{border:none;background:transparent;padding:9px 18px;border-radius:7px;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer}
+  .method-tab.active{background:var(--surface-0);color:var(--primary);box-shadow:var(--shadow)}
+  .method-body{display:none}.method-body.on{display:block}
+  .diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .diff-cell{border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;text-align:center}
+  .diff-cell .lb{display:flex;justify-content:center}
+  .dc-fields{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+  .dc-f{display:flex;flex-direction:column;gap:4px}
+  .dc-f span{font-size:10px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .dc-f input{height:40px;text-align:center;font-size:16px;font-weight:800;border:1px solid var(--field);border-radius:8px;outline:none;width:100%}
+  .dc-f input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-100)}
+  .total-pill{display:inline-flex;align-items:center;gap:8px;background:var(--primary-050);color:var(--primary);font-weight:700;font-size:13px;padding:8px 14px;border-radius:20px}
+
+  .form-card{width:100%}.form-body{padding:24px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.form-grid .full{grid-column:1/-1}
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .form-foot{display:flex;gap:10px;padding:18px 24px;border-top:1px solid var(--line-2);background:var(--surface-1);border-radius:0 0 var(--radius) var(--radius)}.form-foot .sp{margin-left:auto}
+  .radio-row{display:flex;gap:10px;flex-wrap:wrap}
+  .chip-radio{border:1px solid var(--field);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;background:var(--surface-0);color:var(--text-2);font-weight:600}
+  .chip-radio.sel{border-color:var(--primary);background:var(--primary-050);color:var(--primary)}
+  .answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .opt-field{display:flex;align-items:center;gap:10px}
+  .opt-tag{width:30px;height:42px;border-radius:var(--radius-sm);background:var(--surface-2);display:grid;place-items:center;font-weight:800;color:var(--text-2);flex:none}
+  .opt-field.correct .opt-tag{background:var(--success-050);color:var(--success-700)}
+  .opt-field.correct .input{border-color:var(--success);box-shadow:0 0 0 3px var(--success-050)}
+  .rte{border:1px solid var(--field);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface-0);transition:border-color .15s,box-shadow .15s}
+  .rte:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-100)}
+  .rte-toolbar{display:flex;align-items:center;gap:3px;padding:7px 8px;border-bottom:1px solid var(--line-2);background:var(--surface-1);flex-wrap:wrap}
+  .rte-btn{min-width:30px;height:28px;padding:0 8px;border:1px solid transparent;background:transparent;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-2);font-weight:600}
+  .rte-btn:hover{background:var(--surface-2);color:var(--text-1)}
+  .rte-sep{width:1px;height:18px;background:var(--line);margin:0 4px}
+  .rte-area{min-height:120px;max-height:460px;overflow-y:auto;padding:12px 14px;font-size:14px;line-height:1.6;outline:none;color:var(--text-1)}
+  .rte-area:empty:before{content:attr(data-ph);color:var(--text-3)}
+  .rte-area p{margin:0 0 8px}.rte-area ul,.rte-area ol{margin:0 0 8px 22px}
+
+  .modal-overlay{position:fixed;inset:0;z-index:45;background:rgba(33,33,33,.45);display:none;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.on{display:flex}
+  .modal{background:var(--surface-0);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:560px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;animation:fade .2s ease}
+  .modal-head{display:flex;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line-2)}
+  .modal-head h3{margin:0;font-size:16px}.modal-head .msub{font-size:12px;color:var(--text-3);margin-top:2px}
+  .modal-x{margin-left:auto;width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface-0);cursor:pointer;color:var(--text-2);font-size:13px;flex:none}
+  .modal-x:hover{background:var(--surface-1)}
+  .modal-body{padding:22px;overflow-y:auto}
+  .modal-foot{display:flex;gap:10px;align-items:center;padding:16px 22px;border-top:1px solid var(--line-2);background:var(--surface-1)}
+  .modal-foot .sp{margin-left:auto}
+  .meta-head{display:flex;align-items:center;margin-bottom:8px}.meta-head .sp{margin-left:auto}
+  .meta-row{display:flex;gap:10px;margin-bottom:8px}
+  .meta-row .input{height:38px}
+  .meta-row .rm{width:38px;height:38px;border:1px solid var(--line);border-radius:7px;background:var(--surface-0);color:var(--danger-700);cursor:pointer;flex:none}
+  .meta-row .rm:hover{background:var(--danger-050)}
+  .meta-empty{font-size:12px;color:var(--text-3);padding:2px 0 4px}
+  .logo-up{display:flex;align-items:center;gap:14px}
+  .logo-prev{width:60px;height:60px;border-radius:13px;border:1px dashed var(--field);display:grid;place-items:center;overflow:hidden;background:var(--surface-1);color:var(--text-3);font-size:10.5px;text-align:center;flex:none}
+  .logo-prev img{width:100%;height:100%;object-fit:cover}
+  .summary-line{display:flex;justify-content:space-between;padding:9px 0;font-size:13px;border-bottom:1px dashed var(--line-2)}.summary-line:last-child{border-bottom:none}
+  .export-fmts{display:grid;gap:12px;margin-top:16px}
+  .fmt{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;background:var(--surface-0);cursor:pointer;transition:border-color .15s,background .15s}
+  .fmt:hover{border-color:var(--primary-400);background:var(--primary-050)}
+  .fmt .ext{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff;flex:none}
+  .ext-x{background:var(--success-700)}.ext-p{background:var(--danger-700)}.ext-w{background:var(--primary)}
+  .fmt .nm{font-weight:700;font-size:14px}.fmt .ds{font-size:12px;color:var(--text-3)}.fmt .go{margin-left:auto}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:60;background:var(--text-1);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;display:flex;gap:10px;align-items:center}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast .tk{width:8px;height:8px;border-radius:50%;background:var(--success)}#toast.err .tk{background:var(--danger)}
+  #print-area{display:none}
+  @media print{#login,#app,#toast{display:none!important}#print-area{display:block!important;padding:20px;font-size:12px}#print-area h1{font-size:18px}#print-area table{width:100%;border-collapse:collapse}#print-area th,#print-area td{border:1px solid #999;padding:6px;text-align:left}}
+  @media (min-width:861px){.side-toggle{display:none}}
+  @media (max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}}
+  @media (max-width:860px){:root{--sidebar:0px}.sidebar{width:250px;transform:translateX(-100%);z-index:60}#app.nav-open .sidebar{transform:translateX(0)}.main{margin-left:0}.side-collapse{display:none}.nav-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55}#app.nav-open .nav-backdrop{display:block}.form-grid,.answer-grid,.diff-grid,.kpi-grid,.trio{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-card">
+    <div class="brand-row"><div class="brand-mark">QB</div><div><div class="brand-name">QuestionBank CMS</div><div class="brand-sub">Sign in</div></div></div>
+    <h1>Sign in to continue</h1>
+    <p class="lede">System admins manage content-admin accounts &amp; master data. Content admins manage question banks.</p>
+    <label class="field-label">Login ID</label><input class="input" id="login-id" value="aisha" />
+    <label class="field-label">Password</label><input class="input" id="login-pass" type="password" value="••••••••••" />
+    <label class="field-label">Sign in as</label>
+    <div class="radio-row" id="role-pick" onclick="pickChip(event)"><span class="chip-radio sel" data-role="content">Content Admin</span><span class="chip-radio" data-role="sysadmin">System Admin</span></div>
+    <button class="btn btn-primary btn-block" onclick="enterApp()">Sign in</button>
+    <p class="hint" style="text-align:center;margin-top:16px">Any credentials work. Content admin uses the login ID created by a system admin (seeded: <b>aisha</b>).</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="side-brand"><div class="brand-mark" id="brand-mark">QB</div><div id="brand-text"><div class="brand-name" id="brand-name" style="font-size:14px">QuestionBank CMS</div><div class="brand-sub" id="brand-sub" style="font-size:10px">System</div></div></div>
+    <nav class="nav" id="nav">
+      <div class="nav-group" data-role="all">Menu</div>
+      <button class="nav-item active" data-view="dashboard" data-role="all"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="lbl">Dashboard</span><span class="tip">Dashboard</span></button>
+      <button class="nav-item" data-view="qbm" data-role="all"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span><span class="lbl">Manage Question Bank</span><span class="tip">Manage Question Bank</span></button>
+      <div class="nav-group" data-role="sysadmin">System Admin</div>
+      <button class="nav-item" data-view="admins" data-role="sysadmin"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="lbl">User Management</span><span class="tip">User Management</span></button>
+      <button class="nav-item" data-view="master" data-role="sysadmin"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span><span class="lbl">Master Management</span><span class="tip">Master Management</span></button>
+    </nav>
+    <div class="side-foot">
+      <div class="user-chip"><div class="avatar" id="u-avatar">SR</div><div class="u-text"><div class="nm" id="u-name">Sam Rivera</div><div class="rl" id="u-role">System Admin</div></div></div>
+      <button class="btn btn-ghost btn-sm signout" onclick="logout()" title="Sign out"><span style="display:grid"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span class="lbl">Sign out</span></button>
+    </div>
+  </aside>
+  <button class="side-collapse" onclick="toggleCollapse()" title="Collapse / expand sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <div class="nav-backdrop" onclick="document.getElementById('app').classList.remove('nav-open')"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="side-toggle" onclick="toggleMobileNav()" title="Menu">☰</button>
+      <div class="crumbs" id="crumb">Dashboard</div>
+      <div style="flex:1"></div>
+      <div class="ctx-select" id="ctx-wrap" style="display:none">Content admin<select id="ctx-admin" onchange="setCtxAdmin(this.value)"></select></div>
+      <button class="bell" title="Notifications"></button>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <section class="view on" id="v-dashboard">
+        <div class="greet">
+          <div class="g-emoji" id="greet-logo">✦</div>
+          <div><h2>Welcome back, <span id="greet-name">Aisha</span></h2><p id="greet-sub">Here's how the question banks are shaping up.</p></div>
+          <div class="g-date" id="g-date"></div>
+        </div>
+        <div class="kpi-grid">
+          <div class="card kpi"><div class="tile tile-primary">▤</div><div><div class="k-num" id="k-banks">0</div><div class="k-lbl">Question Banks</div></div></div>
+          <div class="card kpi"><div class="tile tile-ink">∑</div><div><div class="k-num" id="k-questions">0</div><div class="k-lbl">Total Questions</div></div></div>
+          <div class="card kpi"><div class="tile tile-accent">✦</div><div><div class="k-num" id="k-ai">0</div><div class="k-lbl">AI Generated</div></div></div>
+          <div class="card kpi"><div class="tile tile-success">✎</div><div><div class="k-num" id="k-manual">0</div><div class="k-lbl">Manually Added</div></div></div>
+        </div>
+        <div class="charts-grid" id="charts-grid">
+          <div class="card chart-card" id="card-difficulty"><h3>Questions by difficulty</h3><div class="csub">Distribution across all banks</div><div id="chart-difficulty"></div></div>
+          <div class="card chart-card" id="card-source"><h3>Source split</h3><div class="csub">AI generated vs manually added</div><div id="chart-source"></div></div>
+          <div class="card chart-card" id="card-subject"><h3>Questions by subject</h3><div class="csub">Top subjects by question count</div><div id="chart-subject"></div></div>
+        </div>
+        <div class="two-col">
+          <div class="card"><div class="panel-head"><h3>Recent activity</h3></div><div class="panel-body"><ul class="activity" id="activity-list"></ul></div></div>
+          <div class="card"><div class="panel-head"><h3>Largest banks</h3></div><div class="panel-body"><div class="bars" id="bank-bars"></div></div></div>
+        </div>
+      </section>
+
+      <!-- CONTENT ADMINS (sysadmin) -->
+      <section class="view" id="v-admins">
+        <div class="page-head">
+          <div><h2>User Management</h2><p>Create content-admin accounts, set their logo, and manage each one's master data.</p></div>
+          <div class="head-actions"><button class="btn btn-primary" onclick="openCreateAdminModal()">+ Create Content Admin</button></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Logo</th><th>Full Name</th><th>Login ID</th><th>Email</th><th>Banks</th><th>Master items</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody id="admins-body"></tbody>
+        </table></div>
+        <div class="count-line" id="admins-count"></div>
+      </section>
+
+      <!-- MASTER MANAGEMENT (sysadmin) -->
+      <section class="view" id="v-master">
+        <div class="page-head"><div><h2>Master Management</h2><p>Reference data that powers class &amp; subject dropdowns for a content admin.</p></div></div>
+        <div class="ctx-banner" id="master-ctx">Master data for —</div>
+        <div class="subtabs" id="mtabs">
+          <button class="subtab active" data-msub="classes">Classes <span class="st-badge" id="mt-classes">0</span></button>
+          <button class="subtab" data-msub="subjects">Subjects <span class="st-badge" id="mt-subjects">0</span></button>
+          <button class="subtab" data-msub="chapters">Chapters <span class="st-badge" id="mt-chapters">0</span></button>
+          <button class="subtab" data-msub="topics">Topics <span class="st-badge" id="mt-topics">0</span></button>
+        </div>
+        <div class="msubview on" id="msub-classes">
+          <div class="sub-head"><h3>Classes</h3><p>New content admins are seeded with Class 1–12; edit freely.</p></div>
+          <div class="master-add"><div class="fld grow"><label>Class name</label><input class="input" id="m-class-name" placeholder="e.g. Class 13, Grade A" onkeydown="if(event.key==='Enter')addClass()" /></div><button class="btn btn-primary" onclick="addClass()">+ Add class</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Class</th><th>Chapters</th><th>Banks</th><th style="text-align:right">Actions</th></tr></thead><tbody id="classes-body"></tbody></table></div>
+        </div>
+        <div class="msubview" id="msub-subjects">
+          <div class="sub-head"><h3>Subjects</h3><p>Available when this admin creates banks or generates questions.</p></div>
+          <div class="master-add"><div class="fld grow"><label>Subject name</label><input class="input" id="m-subject-name" placeholder="e.g. Computer Science" onkeydown="if(event.key==='Enter')addSubject()" /></div><button class="btn btn-primary" onclick="addSubject()">+ Add subject</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Chapters</th><th>Banks</th><th style="text-align:right">Actions</th></tr></thead><tbody id="subjects-body"></tbody></table></div>
+        </div>
+        <div class="msubview" id="msub-chapters">
+          <div class="sub-head"><h3>Chapters</h3><p>A chapter belongs to a class and subject.</p></div>
+          <div class="master-add"><div class="fld"><label>Class</label><select class="input" id="m-chapter-class"></select></div><div class="fld"><label>Subject</label><select class="input" id="m-chapter-subject"></select></div><div class="fld grow"><label>Chapter name</label><input class="input" id="m-chapter-name" placeholder="e.g. Laws of Motion" onkeydown="if(event.key==='Enter')addChapter()" /></div><button class="btn btn-primary" onclick="addChapter()">+ Add chapter</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Chapter</th><th>Class</th><th>Subject</th><th>Topics</th><th style="text-align:right">Actions</th></tr></thead><tbody id="chapters-body"></tbody></table></div>
+        </div>
+        <div class="msubview" id="msub-topics">
+          <div class="sub-head"><h3>Topics</h3><p>Topics sit under a chapter.</p></div>
+          <div class="master-add"><div class="fld grow"><label>Chapter</label><select class="input" id="m-topic-chapter"></select></div><div class="fld grow"><label>Topic name</label><input class="input" id="m-topic-name" placeholder="e.g. Newton's Second Law" onkeydown="if(event.key==='Enter')addTopic()" /></div><button class="btn btn-primary" onclick="addTopic()">+ Add topic</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Topic</th><th>Chapter</th><th>Class</th><th>Subject</th><th style="text-align:right">Actions</th></tr></thead><tbody id="topics-body"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- MANAGE QUESTION BANK -->
+      <section class="view" id="v-qbm">
+        <div class="qbm-screen on" id="screen-list">
+          <div class="page-head">
+            <div><h2>Manage Question Bank</h2><p id="qbm-sub">All question banks. Use the ⋮ menu to add, view, or export questions.</p></div>
+            <div class="head-actions"><button class="btn btn-primary" onclick="openCreateModal()">+ Create Question Bank</button></div>
+          </div>
+          <div class="toolbar">
+            <input class="tb-search" id="qbm-search" placeholder="Search question banks…" oninput="renderBankList()" />
+            <select class="select-min" id="flt-class" onchange="renderBankList()"></select>
+            <select class="select-min" id="flt-subject" onchange="renderBankList()"></select>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Question Bank Name</th><th>Class</th><th>Subject</th><th>Total Questions</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="banks-body"></tbody>
+          </table></div>
+          <div class="count-line" id="banks-count"></div>
+        </div>
+
+        <div class="qbm-screen" id="screen-add" style="display:none">
+          <div class="page-head">
+            <div><h2>Add Questions</h2><p id="add-bank-label">—</p></div>
+            <div class="head-actions"><button class="btn btn-ghost" onclick="go('qbm')">← Back to banks</button><button class="btn btn-soft" onclick="qbViewQuestions(currentBankId)">View questions</button></div>
+          </div>
+          <div class="method-tabs">
+            <button class="method-tab active" data-method="manual" onclick="showAddMethod('manual')">Manual</button>
+            <button class="method-tab" data-method="ai" onclick="showAddMethod('ai')">AI Generated</button>
+          </div>
+          <div class="method-body on" id="method-manual">
+            <div class="card form-card">
+              <div class="form-body"><div class="form-grid">
+                <div class="full"><label class="field-label">Question type</label><div class="radio-row" id="am-type" onclick="pickChip(event)"><span class="chip-radio sel">Multiple choice</span><span class="chip-radio">True / False</span><span class="chip-radio">Short answer</span></div></div>
+                <!-- Rich text editor (built-in). To swap in CKEditor 5 instead: load the CKEditor classic
+                     build from a CDN, then call ClassicEditor.create on the #am-text element after opening
+                     Add Questions, and read its value with editor.getData in saveManual. -->
+                <div class="full"><label class="field-label">Question text <span class="req">*</span></label>
+                  <div class="rte">
+                    <div class="rte-toolbar">
+                      <button type="button" class="rte-btn" onmousedown="rteCmd(event,'bold')" title="Bold"><b>B</b></button>
+                      <button type="button" class="rte-btn" onmousedown="rteCmd(event,'italic')" title="Italic"><i>I</i></button>
+                      <button type="button" class="rte-btn" onmousedown="rteCmd(event,'underline')" title="Underline"><u>U</u></button>
+                      <span class="rte-sep"></span>
+                      <button type="button" class="rte-btn" onmousedown="rteCmd(event,'insertUnorderedList')" title="Bullet list">• List</button>
+                      <button type="button" class="rte-btn" onmousedown="rteCmd(event,'insertOrderedList')" title="Numbered list">1. List</button>
+                      <span class="rte-sep"></span>
+                      <button type="button" class="rte-btn" onmousedown="rteCmd(event,'superscript')" title="Superscript">x²</button>
+                      <button type="button" class="rte-btn" onmousedown="rteCmd(event,'subscript')" title="Subscript">x₂</button>
+                      <span class="rte-sep"></span>
+                      <button type="button" class="rte-btn" onmousedown="rteCmd(event,'removeFormat')" title="Clear formatting">Clear</button>
+                    </div>
+                    <div class="rte-area" id="am-text" contenteditable="true" data-ph="Type the question…"></div>
+                  </div>
+                  <div class="hint">Rich text — bold, italic, underline, lists, super/subscript. The editor grows as you type.</div>
+                </div>
+                <div class="full"><label class="field-label">Options</label>
+                  <div class="answer-grid">
+                    <div class="opt-field correct" data-opt="A"><span class="opt-tag">A</span><input class="input" id="am-a" placeholder="Option A" /></div>
+                    <div class="opt-field" data-opt="B"><span class="opt-tag">B</span><input class="input" id="am-b" placeholder="Option B" /></div>
+                    <div class="opt-field" data-opt="C"><span class="opt-tag">C</span><input class="input" id="am-c" placeholder="Option C" /></div>
+                    <div class="opt-field" data-opt="D"><span class="opt-tag">D</span><input class="input" id="am-d" placeholder="Option D" /></div>
+                  </div><div class="hint">The highlighted field is the correct answer selected below.</div></div>
+                <div class="full trio">
+                  <div><label class="field-label">Correct answer <span class="req">*</span></label><select class="input" id="am-correct" onchange="markCorrect()"><option value="A">Option A</option><option value="B">Option B</option><option value="C">Option C</option><option value="D">Option D</option></select></div>
+                  <div><label class="field-label">Difficulty level</label><select class="input" id="am-diff"><option>Easy</option><option selected>Medium</option><option>Hard</option></select></div>
+                  <div><label class="field-label">Marks</label><input class="input" id="am-marks" type="number" value="2" /></div>
+                </div>
+              </div></div>
+              <div class="form-foot"><span class="hint" id="add-count" style="align-self:center">0 questions added this session</span><span class="sp"></span><button class="btn btn-primary" onclick="saveManual()">Save question</button></div>
+            </div>
+          </div>
+          <div class="method-body" id="method-ai">
+            <div class="card">
+              <div class="form-body">
+                <div class="form-grid">
+                  <div><label class="field-label">Class <span class="req">*</span></label><select class="input" id="aiq-class"></select></div>
+                  <div><label class="field-label">Subject <span class="req">*</span></label><select class="input" id="aiq-subject"></select></div>
+                </div>
+                <label class="field-label" style="margin-top:18px">Difficulty distribution — questions &amp; marks per level</label>
+                <div class="diff-grid">
+                  <div class="diff-cell"><div class="lb"><span class="badge b-success"><span class="d dg-success"></span>Easy</span></div><div class="dc-fields"><div class="dc-f"><span>Questions</span><input type="number" id="aiq-easy" min="0" value="3" oninput="aiTotal()"></div><div class="dc-f"><span>Marks each</span><input type="number" id="aiq-easy-marks" min="0" value="1"></div></div></div>
+                  <div class="diff-cell"><div class="lb"><span class="badge b-primary"><span class="d dg-primary"></span>Medium</span></div><div class="dc-fields"><div class="dc-f"><span>Questions</span><input type="number" id="aiq-medium" min="0" value="4" oninput="aiTotal()"></div><div class="dc-f"><span>Marks each</span><input type="number" id="aiq-medium-marks" min="0" value="2"></div></div></div>
+                  <div class="diff-cell"><div class="lb"><span class="badge b-danger"><span class="d dg-danger"></span>Hard</span></div><div class="dc-fields"><div class="dc-f"><span>Questions</span><input type="number" id="aiq-hard" min="0" value="3" oninput="aiTotal()"></div><div class="dc-f"><span>Marks each</span><input type="number" id="aiq-hard-marks" min="0" value="3"></div></div></div>
+                </div>
+                <div style="margin-top:16px"><span class="total-pill">Number of questions: <b id="aiq-total">10</b></span></div>
+              </div>
+              <div class="form-foot"><span class="hint" style="align-self:center">Generated questions are added straight to the bank.</span><span class="sp"></span><button class="btn btn-primary" onclick="genAI()">✦ Generate questions</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qbm-screen" id="screen-view" style="display:none">
+          <div class="page-head">
+            <div><h2>View Questions</h2><p id="view-bank-label">—</p></div>
+            <div class="head-actions"><button class="btn btn-ghost" onclick="go('qbm')">← Back to banks</button><button class="btn btn-soft" onclick="qbAddQuestions(currentBankId)">Add questions</button><button class="btn btn-primary" onclick="qbExport(currentBankId)">Export</button></div>
+          </div>
+          <div class="toolbar"><span class="hint" id="view-summary" style="align-self:center"></span></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th style="width:60px">#</th><th>Question</th><th>Correct Answer</th><th>Difficulty</th><th>Source</th></tr></thead>
+            <tbody id="view-body"></tbody>
+          </table></div>
+          <div class="count-line" id="view-count"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CREATE CONTENT ADMIN -->
+<div class="modal-overlay" id="modal-admin">
+  <div class="modal">
+    <div class="modal-head"><div><h3 id="ca-title">Create Content Admin</h3><div class="msub" id="ca-msub">Account, branding logo &amp; seeded master data</div></div><button class="modal-x" onclick="closeModal('modal-admin')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="full"><label class="field-label">Logo</label>
+          <div class="logo-up"><div class="logo-prev" id="ca-logo-prev">No logo</div><div><label class="btn btn-soft btn-sm" style="cursor:pointer">Upload logo<input type="file" id="ca-logo" accept="image/*" onchange="caLogoPreview(this)" style="display:none"></label><div class="hint">PNG/JPG. Optional — initials are used if none.</div></div></div>
+        </div>
+        <div class="full"><label class="field-label">Full name <span class="req">*</span></label><input class="input" id="ca-name" placeholder="e.g. Aisha Rahman" /></div>
+        <div><label class="field-label">Login ID <span class="req">*</span></label><input class="input" id="ca-login" placeholder="e.g. aisha" /></div>
+        <div><label class="field-label">Email <span class="req">*</span></label><input class="input" id="ca-email" type="email" placeholder="name@school.edu" /></div>
+        <div class="full"><label class="field-label">Password <span class="req">*</span></label><input class="input" id="ca-pass" type="text" placeholder="Set an initial password" /></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('modal-admin')">Cancel</button><span class="sp"></span><button class="btn btn-primary" id="ca-save" onclick="saveAdmin()">Create content admin</button></div>
+  </div>
+</div>
+
+<!-- MODAL: CREATE QUESTION BANK -->
+<div class="modal-overlay" id="modal-createBank">
+  <div class="modal">
+    <div class="modal-head"><div><h3>Create Question Bank</h3><div class="msub" id="cb-owner">—</div></div><button class="modal-x" onclick="closeModal('modal-createBank')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div><label class="field-label">Class <span class="req">*</span></label><select class="input" id="cb-class" onchange="cbClsSub()"></select></div>
+        <div><label class="field-label">Subject <span class="req">*</span></label><select class="input" id="cb-subject" onchange="cbClsSub()"></select></div>
+        <div class="full"><label class="field-label">Question Bank Name <span class="req">*</span></label><input class="input" id="cb-name" placeholder="Pick class & subject — name auto-fills…" oninput="cbNameInput()" /><div class="hint" id="cb-name-hint">Auto-filled from class &amp; subject — edit freely.</div></div>
+        <div class="full"><label class="field-label">Description</label><textarea class="input" id="cb-desc" placeholder="Short description of what this bank covers…"></textarea></div>
+        <div class="full">
+          <div class="meta-head"><label class="field-label" style="margin:0">Metadata</label><span class="sp"></span><button class="btn btn-soft btn-sm" onclick="addMetaRow()">+ Add</button></div>
+          <div id="meta-rows"></div>
+          <div class="hint">Optional custom fields (e.g. Board = CBSE, Term = 1).</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('modal-createBank')">Cancel</button><span class="sp"></span><button class="btn btn-primary" onclick="saveBankModal()">Create question bank</button></div>
+  </div>
+</div>
+
+<!-- MODAL: EXPORT -->
+<div class="modal-overlay" id="modal-export">
+  <div class="modal">
+    <div class="modal-head"><div><h3>Export Questions</h3><div class="msub" id="ex-sub">—</div></div><button class="modal-x" onclick="closeModal('modal-export')">✕</button></div>
+    <div class="modal-body">
+      <div class="summary-line"><span>Questions in this bank</span><b id="ex-total">0</b></div>
+      <div class="export-fmts">
+        <div class="fmt" onclick="exportBank('excel')"><div class="ext ext-x">XLS</div><div><div class="nm">Export as Excel</div><div class="ds">Downloads a .csv with answer key</div></div><div class="go"><button class="btn btn-success btn-sm">Export</button></div></div>
+        <div class="fmt" onclick="exportBank('word')"><div class="ext ext-w">DOC</div><div><div class="nm">Export as Word</div><div class="ds">Downloads an editable .doc</div></div><div class="go"><button class="btn btn-soft btn-sm">Export</button></div></div>
+        <div class="fmt" onclick="exportBank('pdf')"><div class="ext ext-p">PDF</div><div><div class="nm">Export as PDF</div><div class="ds">Downloads a formatted .pdf</div></div><div class="go"><button class="btn btn-danger btn-sm">Export</button></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><span class="tk"></span><span id="toast-msg">Saved</span></div>
+<div id="print-area"></div>
+
+<script>
+/* ============ STATE ============ */
+const state={admins:[],master:{},banks:[],questions:[],activity:[],role:null,session:{},ctxAdminId:null,_seeded:false};
+let mSeq=1,adminSeq=1,bankSeq=1,qSeq=1,currentBankId=null,caLogoData=null;
+const SYS={name:'Sam Rivera',role:'System Admin',initials:'SR'};
+
+const genPool=[
+  {q:"A force of 20 N acts on a 4 kg mass. What is the acceleration?",o:["2 m/s2","5 m/s2","10 m/s2","80 m/s2"],c:1},
+  {q:"Newton's first law is also known as the law of…",o:["Acceleration","Inertia","Gravitation","Momentum"],c:1},
+  {q:"The SI unit of force is the…",o:["Joule","Watt","Newton","Pascal"],c:2},
+  {q:"Momentum is the product of mass and…",o:["Velocity","Acceleration","Force","Distance"],c:0},
+  {q:"If the net force on a body is zero, the body…",o:["Must be at rest","Moves at constant velocity","Must accelerate","Changes direction"],c:1},
+  {q:"Action and reaction forces act on…",o:["The same body","Different bodies","No body","Only moving bodies"],c:1},
+  {q:"A 2 kg ball accelerates at 3 m/s2. The applied force is…",o:["1.5 N","5 N","6 N","0.66 N"],c:2},
+  {q:"Which of these is a vector quantity?",o:["Speed","Mass","Velocity","Distance"],c:2},
+  {q:"Weight of a 10 kg body (g = 9.8 m/s2) is about…",o:["9.8 N","98 N","10 N","1.02 N"],c:1},
+  {q:"The inertia of a body depends on its…",o:["Speed","Mass","Shape","Colour"],c:1},
+];
+function seedMasterSet(){const M={classes:[],subjects:[],chapters:[],topics:[]};for(let i=1;i<=12;i++)M.classes.push({id:mSeq++,name:'Class '+i});['Physics','Chemistry','Mathematics','Biology','English'].forEach(n=>M.subjects.push({id:mSeq++,name:n}));return M;}
+function seedDefaults(){const a={id:adminSeq++,fullName:'Aisha Rahman',loginId:'aisha',email:'aisha@school.edu',password:'demo',logo:null};state.admins.push(a);state.master[a.id]=seedMasterSet();state.ctxAdminId=a.id;}
+
+/* ============ HELPERS ============ */
+let tT;function toast(msg,err){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.toggle('err',!!err);t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2600);}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function today(){return new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+function timeNow(){return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
+function addActivity(kind,text){state.activity.unshift({kind,text,time:'Just now · '+timeNow()});}
+function pickChip(e){const c=e.target.closest('.chip-radio');if(!c)return;c.parentElement.querySelectorAll('.chip-radio').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');}
+function selectedChip(id){const s=document.querySelector('#'+id+' .chip-radio.sel');return s?s.textContent.trim():'Multiple choice';}
+function selectedRole(){const s=document.querySelector('#role-pick .chip-radio.sel');return s?s.dataset.role:'content';}
+function emptyRow(cols,title,desc,btn){return `<tr class="empty-tr"><td colspan="${cols}"><div class="empty-state"><div class="ill"></div><h4>${title}</h4><p>${desc}</p>${btn||''}</div></td></tr>`;}
+function setOptions(el,html){if(!el)return;const cur=el.value;el.innerHTML=html;if([...el.options].some(o=>o.value===cur))el.value=cur;}
+function nameFrom(cls,subject){if(!cls&&!subject)return '';return [cls,subject].filter(Boolean).join(' — ');}
+function openModal(id){document.getElementById(id).classList.add('on');}
+function closeModal(id){document.getElementById(id).classList.remove('on');}
+function toggleCollapse(){document.getElementById('app').classList.toggle('collapsed');}
+function toggleMobileNav(){document.getElementById('app').classList.toggle('nav-open');}
+function initials(name){return String(name||'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'CA';}
+function getAdmin(id){return state.admins.find(a=>a.id===id);}
+function currentAdminId(){return state.role==='sysadmin'?state.ctxAdminId:(state.session&&state.session.adminId);}
+function masterOf(id){if(!id)return {classes:[],subjects:[],chapters:[],topics:[]};if(!state.master[id])state.master[id]={classes:[],subjects:[],chapters:[],topics:[]};return state.master[id];}
+function myBanks(){const id=currentAdminId();return state.banks.filter(b=>b.adminId===id);}
+function myBankIdSet(){return new Set(myBanks().map(b=>b.id));}
+function myQuestions(){const s=myBankIdSet();return state.questions.filter(q=>s.has(q.bankId));}
+function getBank(id){return state.banks.find(b=>b.id===id);}
+function bankQs(id){return state.questions.filter(q=>q.bankId===id);}
+
+/* ============ DROPDOWNS ============ */
+function formOpts(placeholder,arr,selected){return `<option value="">${placeholder}</option>`+arr.map(x=>`<option${selected===x.name?' selected':''}>${esc(x.name)}</option>`).join('');}
+function filterOpts(label,arr){return `<option>${label}</option>`+arr.map(x=>`<option>${esc(x.name)}</option>`).join('');}
+function refreshDropdowns(){
+  const M=masterOf(currentAdminId());const cls=M.classes,subs=M.subjects;
+  setOptions(document.getElementById('cb-class'),formOpts('Select class…',cls));
+  setOptions(document.getElementById('cb-subject'),formOpts('Select subject…',subs));
+  setOptions(document.getElementById('aiq-class'),formOpts('Select class…',cls));
+  setOptions(document.getElementById('aiq-subject'),formOpts('Select subject…',subs));
+  setOptions(document.getElementById('flt-class'),filterOpts('Class · All',cls));
+  setOptions(document.getElementById('flt-subject'),filterOpts('Subject · All',subs));
+  setOptions(document.getElementById('m-chapter-class'),cls.map(c=>`<option>${esc(c.name)}</option>`).join('')||'<option value="">Add a class first</option>');
+  setOptions(document.getElementById('m-chapter-subject'),subs.map(s=>`<option>${esc(s.name)}</option>`).join('')||'<option value="">Add a subject first</option>');
+  setOptions(document.getElementById('m-topic-chapter'),M.chapters.length?M.chapters.map(c=>`<option value="${c.id}">${esc(c.name)} — ${esc(c.cls)} / ${esc(c.subject)}</option>`).join(''):'<option value="">Add a chapter first</option>');
+}
+
+/* ============ SESSION / BRANDING ============ */
+function setBrand(logo,ini,name,sub){const m=document.getElementById('brand-mark');m.innerHTML=logo?`<img src="${logo}" style="width:100%;height:100%;object-fit:cover;border-radius:9px">`:ini;document.getElementById('brand-name').textContent=name;document.getElementById('brand-sub').textContent=sub;}
+function setUser(logo,ini,name,role){const a=document.getElementById('u-avatar');a.innerHTML=logo?`<img src="${logo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:ini;document.getElementById('u-name').textContent=name;document.getElementById('u-role').textContent=role;}
+function populateCtx(){const sel=document.getElementById('ctx-admin');if(!state.admins.length){sel.innerHTML='<option value="">No content admins</option>';return;}sel.innerHTML=state.admins.map(a=>`<option value="${a.id}">${esc(a.fullName)}</option>`).join('');if(state.ctxAdminId)sel.value=String(state.ctxAdminId);}
+function applySession(){
+  const role=state.role;
+  document.querySelectorAll('#nav [data-role]').forEach(el=>{const r=el.dataset.role;el.style.display=(r==='all'||r===role)?'':'none';});
+  const isContent=role!=='sysadmin';
+  ['card-difficulty','card-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=isContent?'none':'';});
+  document.getElementById('charts-grid').classList.toggle('solo',isContent);
+  document.getElementById('ctx-wrap').style.display=role==='sysadmin'?'flex':'none';
+  populateCtx();
+  const gl=document.getElementById('greet-logo');
+  if(role==='sysadmin'){
+    setBrand(null,'QB','QuestionBank CMS','System Admin');setUser(null,'SR',SYS.name,SYS.role);
+    document.getElementById('brand-text').style.display='';
+    document.getElementById('greet-name').textContent='Sam';gl.innerHTML='✦';
+    const a=getAdmin(state.ctxAdminId);document.getElementById('greet-sub').textContent=a?('Viewing content admin: '+a.fullName):'Create a content admin to begin.';
+  }else{
+    const a=getAdmin(currentAdminId());
+    setBrand(a?a.logo:null,initials(a&&a.fullName),'','');
+    document.getElementById('brand-text').style.display='none';
+    setUser(null,initials(a&&a.fullName),a?a.fullName:'Content Admin','Content Admin');
+    document.getElementById('greet-name').textContent=a?a.fullName.split(' ')[0]:'there';
+    gl.innerHTML='✦';
+    document.getElementById('greet-sub').textContent="Here's how your question banks are shaping up.";
+  }
+}
+function setCtxAdmin(id){state.ctxAdminId=id?parseInt(id,10):null;applySession();renderAll();if(document.getElementById('v-qbm').classList.contains('on'))showQbmScreen('list');}
+
+/* ============ NAV ============ */
+const masterSubLabels={classes:"Classes",subjects:"Subjects",chapters:"Chapters",topics:"Topics"};
+function hideViews(){document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));}
+function setNav(view){document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===view));}
+function roleAllows(view){const map={dashboard:'all',qbm:'all',admins:'sysadmin',master:'sysadmin'};const need=map[view]||'content';return need==='all'||need===state.role;}
+function go(target){
+  closeAllMenus();
+  if(state.role&&!roleAllows(target)){toast('Your role has no access to that area',true);return;}
+  if(target==='dashboard'){hideViews();document.getElementById('v-dashboard').classList.add('on');setNav('dashboard');document.getElementById('crumb').textContent='Dashboard';}
+  else if(target==='admins'){hideViews();document.getElementById('v-admins').classList.add('on');setNav('admins');document.getElementById('crumb').innerHTML='System Admin <span style="color:var(--line)">/</span> <b>User Management</b>';}
+  else if(target==='master'){hideViews();document.getElementById('v-master').classList.add('on');setNav('master');showMasterSub('classes');}
+  else{hideViews();document.getElementById('v-qbm').classList.add('on');setNav('qbm');showQbmScreen('list');}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showMasterSub(msub){document.querySelectorAll('.msubview').forEach(s=>s.classList.remove('on'));document.getElementById('msub-'+msub).classList.add('on');document.querySelectorAll('#mtabs .subtab').forEach(t=>t.classList.toggle('active',t.dataset.msub===msub));document.getElementById('crumb').innerHTML='Master Management <span style="color:var(--line)">/</span> <b>'+masterSubLabels[msub]+'</b>';}
+function showQbmScreen(name){['list','add','view'].forEach(s=>{const el=document.getElementById('screen-'+s);el.style.display=(s===name)?'block':'none';el.classList.toggle('on',s===name);});const lbl={list:'Manage Question Bank',add:'Add Questions',view:'View Questions'};document.getElementById('crumb').innerHTML=name==='list'?'<b>Manage Question Bank</b>':'Manage Question Bank <span style="color:var(--line)">/</span> <b>'+lbl[name]+'</b>';}
+document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('.nav-item');if(b){go(b.dataset.view);document.getElementById('app').classList.remove('nav-open');}});
+document.getElementById('mtabs').addEventListener('click',e=>{const t=e.target.closest('.subtab');if(t)showMasterSub(t.dataset.msub);});
+document.addEventListener('click',closeAllMenus);
+
+function enterApp(){
+  if(!state._seeded){seedDefaults();state._seeded=true;}
+  const role=selectedRole();state.role=role;
+  if(role==='content'){
+    const lid=document.getElementById('login-id').value.trim().toLowerCase();
+    let a=state.admins.find(x=>x.loginId.toLowerCase()===lid)||state.admins[0];
+    if(!a){toast('No content admin exists. Sign in as System Admin to create one.',true);return;}
+    state.session={adminId:a.id};
+  }else{state.session={};if(!state.ctxAdminId&&state.admins.length)state.ctxAdminId=state.admins[0].id;}
+  document.getElementById('login').style.display='none';document.getElementById('app').classList.add('on');
+  document.getElementById('g-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  applySession();renderAll();go('dashboard');
+}
+function logout(){document.getElementById('login').style.display='flex';document.getElementById('app').classList.remove('on','collapsed','nav-open');}
+
+/* ============ CONTENT ADMINS ============ */
+function caLogoPreview(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{caLogoData=r.result;document.getElementById('ca-logo-prev').innerHTML=`<img src="${caLogoData}">`;};r.readAsDataURL(f);}
+let editingAdminId=null;
+function openCreateAdminModal(){editingAdminId=null;caLogoData=null;document.getElementById('ca-title').textContent='Create Content Admin';document.getElementById('ca-msub').textContent='Account, branding logo & seeded master data';document.getElementById('ca-save').textContent='Create content admin';document.getElementById('ca-logo-prev').innerHTML='No logo';['ca-name','ca-login','ca-email','ca-pass'].forEach(i=>document.getElementById(i).value='');document.getElementById('ca-logo').value='';openModal('modal-admin');}
+function openEditAdminModal(id){closeAllMenus();const a=getAdmin(id);if(!a)return;editingAdminId=id;caLogoData=a.logo||null;document.getElementById('ca-title').textContent='Edit Content Admin';document.getElementById('ca-msub').textContent='Update account details, login & logo';document.getElementById('ca-save').textContent='Save changes';document.getElementById('ca-logo-prev').innerHTML=a.logo?`<img src="${a.logo}">`:'No logo';document.getElementById('ca-name').value=a.fullName;document.getElementById('ca-login').value=a.loginId;document.getElementById('ca-email').value=a.email;document.getElementById('ca-pass').value=a.password||'';document.getElementById('ca-logo').value='';openModal('modal-admin');}
+function saveAdmin(){
+  const fullName=document.getElementById('ca-name').value.trim(),loginId=document.getElementById('ca-login').value.trim(),email=document.getElementById('ca-email').value.trim(),password=document.getElementById('ca-pass').value.trim();
+  if(!fullName)return toast('Full name is required',true);
+  if(!loginId)return toast('Login ID is required',true);
+  if(state.admins.some(a=>a.loginId.toLowerCase()===loginId.toLowerCase()&&a.id!==editingAdminId))return toast('That login ID is already taken',true);
+  if(!email)return toast('Email is required',true);
+  if(!password)return toast('Password is required',true);
+  if(editingAdminId){
+    const a=getAdmin(editingAdminId);a.fullName=fullName;a.loginId=loginId;a.email=email;a.password=password;a.logo=caLogoData;
+    addActivity('create',`Updated content admin <b>${esc(fullName)}</b>.`);toast('Content admin updated');closeModal('modal-admin');renderAll();applySession();return;
+  }
+  const a={id:adminSeq++,fullName,loginId,email,password,logo:caLogoData};
+  state.admins.push(a);state.master[a.id]=seedMasterSet();state.ctxAdminId=a.id;
+  addActivity('create',`Created content admin <b>${esc(fullName)}</b> with seeded master data.`);
+  toast('Content admin created');closeModal('modal-admin');renderAll();applySession();
+}
+function deleteAdmin(id){closeAllMenus();const a=getAdmin(id);const bankIds=state.banks.filter(b=>b.adminId===id).map(b=>b.id);state.banks=state.banks.filter(b=>b.adminId!==id);state.questions=state.questions.filter(q=>!bankIds.includes(q.bankId));delete state.master[id];state.admins=state.admins.filter(x=>x.id!==id);if(state.ctxAdminId===id)state.ctxAdminId=state.admins.length?state.admins[0].id:null;addActivity('reject',`Removed content admin <b>${esc(a?a.fullName:'')}</b>.`);toast('Content admin removed',true);renderAll();applySession();}
+function manageMasterFor(id){state.ctxAdminId=id;applySession();renderAll();go('master');}
+function renderAdmins(){
+  const body=document.getElementById('admins-body');
+  if(!state.admins.length){body.innerHTML=emptyRow(7,'No content admins yet','Create a content admin account to give them their own branding and master data.','<button class="btn btn-primary btn-sm" onclick="openCreateAdminModal()">+ Create Content Admin</button>');document.getElementById('admins-count').textContent='';return;}
+  body.innerHTML=state.admins.map(a=>{const M=masterOf(a.id);const items=M.classes.length+M.subjects.length+M.chapters.length+M.topics.length;const banks=state.banks.filter(b=>b.adminId===a.id).length;return `<tr>
+    <td><div class="logo-thumb">${a.logo?`<img src="${a.logo}">`:esc(initials(a.fullName))}</div></td>
+    <td><span class="qname">${esc(a.fullName)}</span></td>
+    <td><span class="badge b-neutral">${esc(a.loginId)}</span></td>
+    <td class="sub">${esc(a.email)}</td>
+    <td class="num-cell">${banks}</td>
+    <td class="num-cell">${items}</td>
+    <td><div class="row-actions"><button class="icon-btn" onclick="openEditAdminModal(${a.id})">Edit</button><button class="icon-btn" onclick="manageMasterFor(${a.id})">Manage master</button><button class="icon-btn del" onclick="deleteAdmin(${a.id})">Delete</button></div></td>
+  </tr>`;}).join('');
+  document.getElementById('admins-count').textContent=`${state.admins.length} content admin${state.admins.length>1?'s':''}`;
+}
+
+/* ============ MASTER CRUD (scoped to current admin) ============ */
+function needAdmin(){if(!currentAdminId()){toast('Select or create a content admin first',true);return false;}return true;}
+function addClass(){if(!needAdmin())return;const M=masterOf(currentAdminId());const el=document.getElementById('m-class-name');const name=el.value.trim();if(!name)return toast('Enter a class name',true);if(M.classes.some(c=>c.name.toLowerCase()===name.toLowerCase()))return toast('That class already exists',true);M.classes.push({id:mSeq++,name});el.value='';addActivity('create',`Added class <b>${esc(name)}</b>.`);toast('Class added');renderAll();}
+function addSubject(){if(!needAdmin())return;const M=masterOf(currentAdminId());const el=document.getElementById('m-subject-name');const name=el.value.trim();if(!name)return toast('Enter a subject name',true);if(M.subjects.some(s=>s.name.toLowerCase()===name.toLowerCase()))return toast('That subject already exists',true);M.subjects.push({id:mSeq++,name});el.value='';addActivity('create',`Added subject <b>${esc(name)}</b>.`);toast('Subject added');renderAll();}
+function addChapter(){if(!needAdmin())return;const M=masterOf(currentAdminId());const name=document.getElementById('m-chapter-name').value.trim();const cls=document.getElementById('m-chapter-class').value;const subject=document.getElementById('m-chapter-subject').value;if(!cls||!subject)return toast('Add a class and subject first',true);if(!name)return toast('Enter a chapter name',true);M.chapters.push({id:mSeq++,name,cls,subject});document.getElementById('m-chapter-name').value='';addActivity('create',`Added chapter <b>${esc(name)}</b>.`);toast('Chapter added');renderAll();}
+function addTopic(){if(!needAdmin())return;const M=masterOf(currentAdminId());const name=document.getElementById('m-topic-name').value.trim();const chId=parseInt(document.getElementById('m-topic-chapter').value,10);const ch=M.chapters.find(c=>c.id===chId);if(!ch)return toast('Add a chapter first',true);if(!name)return toast('Enter a topic name',true);M.topics.push({id:mSeq++,name,chapterId:chId,chapter:ch.name,cls:ch.cls,subject:ch.subject});document.getElementById('m-topic-name').value='';addActivity('create',`Added topic <b>${esc(name)}</b>.`);toast('Topic added');renderAll();}
+function delClass(id){const M=masterOf(currentAdminId());const c=M.classes.find(x=>x.id===id);const chs=M.chapters.filter(x=>x.cls===c.name).map(x=>x.id);M.classes=M.classes.filter(x=>x.id!==id);M.chapters=M.chapters.filter(x=>x.cls!==c.name);M.topics=M.topics.filter(x=>!chs.includes(x.chapterId));toast('Class removed',true);renderAll();}
+function delSubject(id){const M=masterOf(currentAdminId());const s=M.subjects.find(x=>x.id===id);const chs=M.chapters.filter(x=>x.subject===s.name).map(x=>x.id);M.subjects=M.subjects.filter(x=>x.id!==id);M.chapters=M.chapters.filter(x=>x.subject!==s.name);M.topics=M.topics.filter(x=>!chs.includes(x.chapterId));toast('Subject removed',true);renderAll();}
+function delChapter(id){const M=masterOf(currentAdminId());M.chapters=M.chapters.filter(x=>x.id!==id);M.topics=M.topics.filter(x=>x.chapterId!==id);toast('Chapter removed',true);renderAll();}
+function delTopic(id){const M=masterOf(currentAdminId());M.topics=M.topics.filter(x=>x.id!==id);toast('Topic removed',true);renderAll();}
+function renderMaster(){
+  const id=currentAdminId();const M=masterOf(id);const a=getAdmin(id);
+  document.getElementById('master-ctx').innerHTML=a?`Master data for <b style="margin-left:4px">${esc(a.fullName)}</b> <span style="opacity:.6">· login ${esc(a.loginId)}</span>`:'No content admin selected — create one under Content Admins.';
+  document.getElementById('mt-classes').textContent=M.classes.length;document.getElementById('mt-subjects').textContent=M.subjects.length;document.getElementById('mt-chapters').textContent=M.chapters.length;document.getElementById('mt-topics').textContent=M.topics.length;
+  document.getElementById('classes-body').innerHTML=M.classes.length?M.classes.map(c=>`<tr><td><span class="qname">${esc(c.name)}</span></td><td class="num-cell">${M.chapters.filter(x=>x.cls===c.name).length}</td><td class="num-cell">${state.banks.filter(b=>b.adminId===id&&b.cls===c.name).length}</td><td><div class="row-actions"><button class="icon-btn del" onclick="delClass(${c.id})">Delete</button></div></td></tr>`).join(''):emptyRow(4,'No classes yet','Add a class above.');
+  document.getElementById('subjects-body').innerHTML=M.subjects.length?M.subjects.map(s=>`<tr><td><span class="qname">${esc(s.name)}</span></td><td class="num-cell">${M.chapters.filter(x=>x.subject===s.name).length}</td><td class="num-cell">${state.banks.filter(b=>b.adminId===id&&b.subject===s.name).length}</td><td><div class="row-actions"><button class="icon-btn del" onclick="delSubject(${s.id})">Delete</button></div></td></tr>`).join(''):emptyRow(4,'No subjects yet','Add a subject above.');
+  document.getElementById('chapters-body').innerHTML=M.chapters.length?M.chapters.map(c=>`<tr><td><span class="qname">${esc(c.name)}</span></td><td>${esc(c.cls)}</td><td>${esc(c.subject)}</td><td class="num-cell">${M.topics.filter(t=>t.chapterId===c.id).length}</td><td><div class="row-actions"><button class="icon-btn del" onclick="delChapter(${c.id})">Delete</button></div></td></tr>`).join(''):emptyRow(5,'No chapters yet','Add a chapter above.');
+  document.getElementById('topics-body').innerHTML=M.topics.length?M.topics.map(t=>`<tr><td><span class="qname">${esc(t.name)}</span></td><td>${esc(t.chapter)}</td><td>${esc(t.cls)}</td><td>${esc(t.subject)}</td><td><div class="row-actions"><button class="icon-btn del" onclick="delTopic(${t.id})">Delete</button></div></td></tr>`).join(''):emptyRow(5,'No topics yet','Add a topic above.');
+}
+
+/* ============ THREE-DOT MENU ============ */
+function closeAllMenus(){document.querySelectorAll('.menu.open').forEach(m=>m.classList.remove('open'));}
+function toggleMenu(e,id){e.stopPropagation();const m=document.getElementById('menu-'+id);const open=m.classList.contains('open');closeAllMenus();if(!open){const r=e.currentTarget.getBoundingClientRect();m.style.top=(r.bottom+4)+'px';m.style.left=(r.right-180)+'px';m.classList.add('open');}}
+
+/* ============ CREATE BANK MODAL ============ */
+let cbNameAuto=true;
+function cbClsSub(){if(cbNameAuto)document.getElementById('cb-name').value=nameFrom(document.getElementById('cb-class').value,document.getElementById('cb-subject').value);}
+function cbNameInput(){const el=document.getElementById('cb-name');cbNameAuto=el.value.trim()==='';document.getElementById('cb-name-hint').textContent=cbNameAuto?'Auto-filled from class & subject — edit freely.':'Custom name — clear to auto-fill again.';}
+function addMetaRow(k,v){const wrap=document.getElementById('meta-rows');const e=wrap.querySelector('.meta-empty');if(e)e.remove();const row=document.createElement('div');row.className='meta-row';row.innerHTML=`<input class="input" placeholder="Field name" value="${k?esc(k):''}"><input class="input" placeholder="Value" value="${v?esc(v):''}"><button class="rm" title="Remove" onclick="this.parentElement.remove();metaEmpty()">✕</button>`;wrap.appendChild(row);}
+function metaEmpty(){const wrap=document.getElementById('meta-rows');if(!wrap.querySelector('.meta-row'))wrap.innerHTML='<div class="meta-empty">No metadata fields added.</div>';}
+function collectMeta(){return [...document.querySelectorAll('#meta-rows .meta-row')].map(r=>{const i=r.querySelectorAll('input');return {key:i[0].value.trim(),value:i[1].value.trim()};}).filter(m=>m.key||m.value);}
+function openCreateModal(){if(!needAdmin())return;const a=getAdmin(currentAdminId());document.getElementById('cb-owner').textContent='For content admin: '+(a?a.fullName:'');cbNameAuto=true;document.getElementById('cb-name').value='';document.getElementById('cb-class').value='';document.getElementById('cb-subject').value='';document.getElementById('cb-desc').value='';document.getElementById('meta-rows').innerHTML='';metaEmpty();document.getElementById('cb-name-hint').textContent='Auto-filled from class & subject — edit freely.';openModal('modal-createBank');}
+function saveBankModal(){
+  const name=document.getElementById('cb-name').value.trim(),cls=document.getElementById('cb-class').value,subject=document.getElementById('cb-subject').value,description=document.getElementById('cb-desc').value.trim();
+  if(!cls||!subject)return toast('Class and subject are required',true);
+  if(!name)return toast('Question bank name is required',true);
+  state.banks.push({id:bankSeq++,adminId:currentAdminId(),name,cls,subject,description,metadata:collectMeta()});
+  addActivity('create',`Created question bank <b>${esc(name)}</b>.`);
+  toast('Question bank created');closeModal('modal-createBank');renderAll();
+}
+
+/* ============ BANK LIST ============ */
+function clearBankFilters(){const s=document.getElementById('qbm-search');if(s)s.value='';const fc=document.getElementById('flt-class'),fs=document.getElementById('flt-subject');if(fc)fc.selectedIndex=0;if(fs)fs.selectedIndex=0;renderBankList();}
+function renderBankList(){
+  const body=document.getElementById('banks-body');const a=getAdmin(currentAdminId());
+  document.getElementById('qbm-sub').textContent=state.role==='sysadmin'&&a?('Question banks for '+a.fullName+'. Use the ⋮ menu to add, view, or export.'):'All question banks. Use the ⋮ menu to add, view, or export questions.';
+  if(!currentAdminId()){body.innerHTML=emptyRow(5,'No content admin selected','Pick a content admin from the top bar, or create one under User Management.','');document.getElementById('banks-count').textContent='';return;}
+  const all=myBanks();
+  if(!all.length){body.innerHTML=emptyRow(5,'No question banks yet','Create the first question bank to start adding or generating questions.','<button class="btn btn-primary btn-sm" onclick="openCreateModal()">+ Create Question Bank</button>');document.getElementById('banks-count').textContent='';return;}
+  const q=((document.getElementById('qbm-search')||{}).value||'').trim().toLowerCase();
+  const fcEl=document.getElementById('flt-class'),fsEl=document.getElementById('flt-subject');
+  const fc=fcEl?fcEl.value:'',fs=fsEl?fsEl.value:'';
+  const banks=all.filter(b=>{
+    if(fc&&fc!=='Class · All'&&b.cls!==fc)return false;
+    if(fs&&fs!=='Subject · All'&&b.subject!==fs)return false;
+    if(q){const hay=(b.name+' '+b.cls+' '+b.subject+' '+(b.description||'')).toLowerCase();if(!hay.includes(q))return false;}
+    return true;
+  });
+  if(!banks.length){body.innerHTML=emptyRow(5,'No matching question banks','Nothing matches your search or filters.','<button class="btn btn-ghost btn-sm" onclick="clearBankFilters()">Clear filters</button>');document.getElementById('banks-count').textContent=`0 of ${all.length} question banks`;return;}
+  body.innerHTML=banks.map(b=>{const qs=bankQs(b.id);return `<tr>
+    <td><span class="qname">${esc(b.name)}</span>${b.metadata&&b.metadata.length?`<span class="sub">${b.metadata.map(m=>esc(m.key)+': '+esc(m.value)).join(' · ')}</span>`:''}</td>
+    <td>${esc(b.cls)}</td><td>${esc(b.subject)}</td>
+    <td class="num-cell">${qs.length}</td>
+    <td><div class="row-actions"><div class="menu-wrap">
+      <button class="icon-btn dots" onclick="toggleMenu(event,${b.id})" title="Actions">⋮</button>
+      <div class="menu" id="menu-${b.id}">
+        <button onclick="qbAddQuestions(${b.id})"><span class="mk"></span>Add Questions</button>
+        <button onclick="qbViewQuestions(${b.id})"><span class="mk"></span>View Questions</button>
+        <button onclick="qbExport(${b.id})"><span class="mk"></span>Export Questions</button>
+        <button onclick="deleteBank(${b.id})"><span class="mk" style="background:var(--danger)"></span>Delete Bank</button>
+      </div>
+    </div></div></td></tr>`;}).join('');
+  const isFiltered=q||(fc&&fc!=='Class · All')||(fs&&fs!=='Subject · All');
+  document.getElementById('banks-count').textContent=isFiltered?`Showing ${banks.length} of ${all.length} question banks`:`Showing ${all.length} question bank${all.length>1?'s':''}`;
+}
+function deleteBank(id){closeAllMenus();const b=getBank(id);state.banks=state.banks.filter(x=>x.id!==id);state.questions=state.questions.filter(q=>q.bankId!==id);addActivity('reject',`Deleted question bank <b>${esc(b?b.name:'')}</b>.`);toast('Question bank deleted',true);renderAll();}
+
+/* ============ ADD QUESTIONS ============ */
+let sessionAdded=0;
+function qbAddQuestions(id){closeAllMenus();currentBankId=id;const b=getBank(id);sessionAdded=0;
+  document.getElementById('add-bank-label').textContent='Bank: '+b.name+' · '+b.cls+' · '+b.subject;
+  document.getElementById('aiq-class').value=b.cls;document.getElementById('aiq-subject').value=b.subject;aiTotal();
+  resetManual();showAddMethod('manual');
+  hideViews();document.getElementById('v-qbm').classList.add('on');setNav('qbm');showQbmScreen('add');window.scrollTo({top:0,behavior:'smooth'});
+}
+function showAddMethod(m){document.querySelectorAll('.method-tab').forEach(t=>t.classList.toggle('active',t.dataset.method===m));document.getElementById('method-manual').classList.toggle('on',m==='manual');document.getElementById('method-ai').classList.toggle('on',m==='ai');}
+function markCorrect(){const v=document.getElementById('am-correct').value;document.querySelectorAll('#method-manual .opt-field').forEach(f=>f.classList.toggle('correct',f.dataset.opt===v));}
+function rteCmd(e,cmd){e.preventDefault();document.getElementById('am-text').focus();try{document.execCommand(cmd,false,null);}catch(_){}}
+function resetManual(){['am-a','am-b','am-c','am-d'].forEach(i=>document.getElementById(i).value='');document.getElementById('am-text').innerHTML='';document.getElementById('am-correct').value='A';document.getElementById('am-diff').value='Medium';document.getElementById('am-marks').value='2';document.querySelectorAll('#am-type .chip-radio').forEach((c,i)=>c.classList.toggle('sel',i===0));markCorrect();document.getElementById('add-count').textContent=sessionAdded+' questions added this session';}
+function saveManual(){
+  const ed=document.getElementById('am-text');const plain=(ed.textContent||'').trim();const html=ed.innerHTML.trim();
+  if(!plain)return toast('Question text is required',true);
+  const b=getBank(currentBankId);
+  state.questions.push({id:qSeq++,bankId:currentBankId,text:plain,html:html,options:[document.getElementById('am-a').value,document.getElementById('am-b').value,document.getElementById('am-c').value,document.getElementById('am-d').value],correct:document.getElementById('am-correct').value,type:selectedChip('am-type'),difficulty:document.getElementById('am-diff').value,marks:document.getElementById('am-marks').value,cls:b.cls,subject:b.subject,source:'Manual'});
+  sessionAdded++;addActivity('manual',`Added a manual question to <b>${esc(b.name)}</b>.`);toast('Question added');resetManual();document.getElementById('am-text').focus();renderDashboard();renderBankList();
+}
+function aiTotal(){const e=+document.getElementById('aiq-easy').value||0,m=+document.getElementById('aiq-medium').value||0,h=+document.getElementById('aiq-hard').value||0;document.getElementById('aiq-total').textContent=e+m+h;}
+function genAI(){
+  const cls=document.getElementById('aiq-class').value,subject=document.getElementById('aiq-subject').value;
+  if(!cls||!subject)return toast('Class and subject are required',true);
+  const e=+document.getElementById('aiq-easy').value||0,m=+document.getElementById('aiq-medium').value||0,h=+document.getElementById('aiq-hard').value||0,total=e+m+h;
+  const em=+document.getElementById('aiq-easy-marks').value||1,mm=+document.getElementById('aiq-medium-marks').value||1,hm=+document.getElementById('aiq-hard-marks').value||1;
+  if(total<=0)return toast('Enter how many questions to generate',true);
+  const b=getBank(currentBankId);let k=0;
+  [['Easy',e,em],['Medium',m,mm],['Hard',h,hm]].forEach(([diff,n,mk])=>{for(let i=0;i<n;i++){const g=genPool[k%genPool.length];k++;state.questions.push({id:qSeq++,bankId:currentBankId,text:g.q,options:g.o,correct:'ABCD'[g.c],type:'Multiple choice',difficulty:diff,marks:String(mk),cls,subject,source:'AI'});}});
+  addActivity('ai',`Generated <b>${total}</b> AI question${total>1?'s':''} into <b>${esc(b.name)}</b>.`);
+  toast(`${total} questions generated`);renderAll();qbViewQuestions(currentBankId);
+}
+
+/* ============ VIEW QUESTIONS ============ */
+const dBadge={Easy:'b-success',Medium:'b-primary',Hard:'b-danger'};
+const dDot={Easy:'dg-success',Medium:'dg-primary',Hard:'dg-danger'};
+function qbViewQuestions(id){closeAllMenus();currentBankId=id;const b=getBank(id);
+  document.getElementById('view-bank-label').textContent='Bank: '+b.name+' · '+b.cls+' · '+b.subject;
+  hideViews();document.getElementById('v-qbm').classList.add('on');setNav('qbm');showQbmScreen('view');renderViewScreen();window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderViewScreen(){
+  const qs=bankQs(currentBankId);const body=document.getElementById('view-body');
+  document.getElementById('view-summary').textContent=qs.length?`${qs.length} question(s) in this bank`:'';
+  document.getElementById('view-count').textContent=qs.length?`Showing ${qs.length} question${qs.length>1?'s':''}`:'';
+  if(!qs.length){body.innerHTML=emptyRow(5,'No questions in this bank yet','Add questions manually or generate them with AI.','<button class="btn btn-primary btn-sm" onclick="qbAddQuestions(currentBankId)">Add questions</button>');return;}
+  body.innerHTML=qs.map((q,i)=>{const ci='ABCD'.indexOf(q.correct);const ctext=q.options[ci]||'';return `<tr>
+    <td class="num-cell">${i+1}</td>
+    <td><span class="qname">${q.html?q.html:esc(q.text)}</span><span class="sub">${esc(q.type||'Multiple choice')} · ${esc(q.marks)} marks</span></td>
+    <td><span class="badge b-success"><span class="d dg-success"></span>${q.correct}</span> <span class="sub">${esc(ctext)}</span></td>
+    <td><span class="badge ${dBadge[q.difficulty]||'b-neutral'}"><span class="d ${dDot[q.difficulty]||''}"></span>${esc(q.difficulty)}</span></td>
+    <td><span class="badge ${q.source==='AI'?'b-accent':'b-primary'}">${esc(q.source)}</span></td>
+  </tr>`;}).join('');
+}
+
+/* ============ EXPORT ============ */
+function qbExport(id){closeAllMenus();currentBankId=id;const b=getBank(id);document.getElementById('ex-sub').textContent=b.name+' · '+b.cls+' · '+b.subject;document.getElementById('ex-total').textContent=bankQs(id).length;openModal('modal-export');}
+function downloadBlob(content,name,type){const blob=(content instanceof Blob)?content:new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+function pdfSafe(s){return String(s).replace(/[—–]/g,'-').replace(/[’‘]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...');}
+function exportBank(fmt){
+  const b=getBank(currentBankId);const rows=bankQs(currentBankId);
+  if(!rows.length)return toast('No questions to export',true);
+  const header=['#','Question','Option A','Option B','Option C','Option D','Correct','Class','Subject','Difficulty','Marks','Source'];
+  const data=rows.map((q,i)=>[i+1,q.text,q.options[0]||'',q.options[1]||'',q.options[2]||'',q.options[3]||'',q.correct,q.cls||'',q.subject||'',q.difficulty,q.marks,q.source]);
+  const fname=(b.name||'questions').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()||'questions';
+  if(fmt==='excel'){
+    const csv=[header,...data].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    downloadBlob('\ufeff'+csv,fname+'.csv','text/csv;charset=utf-8');toast(`Exported ${rows.length} questions to Excel`);
+  }else if(fmt==='word'){
+    const cells=r=>r.map(c=>`<td style="border:1px solid #999;padding:6px">${esc(c)}</td>`).join('');
+    const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body><h2>${esc(b.name)}</h2><p>${esc(b.cls)} · ${esc(b.subject)} · ${rows.length} questions</p><table style="border-collapse:collapse"><tr>${header.map(h=>`<th style="border:1px solid #999;padding:6px;background:#eee">${h}</th>`).join('')}</tr>${data.map(r=>`<tr>${cells(r)}</tr>`).join('')}</table></body></html>`;
+    downloadBlob(html,fname+'.doc','application/msword');toast(`Exported ${rows.length} questions to Word`);
+  }else{
+    if(window.jspdf&&window.jspdf.jsPDF){
+      const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'a4'});const W=555,L=40;let y=54;
+      doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text(pdfSafe(b.name),L,y);
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120);doc.text(pdfSafe(`${b.cls} · ${b.subject} · ${rows.length} questions`),L,y+16);
+      doc.setTextColor(30);y+=42;
+      rows.forEach((q,i)=>{
+        const ql=doc.setFont('helvetica','bold').setFontSize(11).splitTextToSize(pdfSafe(`${i+1}. ${q.text}`),W);
+        doc.setFont('helvetica','normal').setFontSize(10);
+        const opts=[0,1,2,3].map(k=>doc.splitTextToSize(pdfSafe(`${'ABCD'[k]}. ${q.options[k]||''}${'ABCD'[k]===q.correct?'   [correct]':''}`),W-16));
+        const need=ql.length*14+opts.reduce((s,o)=>s+o.length*13,0)+26;
+        if(y+need>800){doc.addPage();y=54;}
+        doc.setFont('helvetica','bold').setFontSize(11).setTextColor(30);doc.text(ql,L,y);y+=ql.length*14+2;
+        doc.setFont('helvetica','normal').setFontSize(10);
+        opts.forEach((o,k)=>{if('ABCD'[k]===q.correct)doc.setTextColor(0,138,46);else doc.setTextColor(60);doc.text(o,L+14,y);y+=o.length*13;});
+        doc.setTextColor(150).setFontSize(9);doc.text(pdfSafe(`Correct: ${q.correct}  ·  ${q.difficulty}  ·  ${q.marks} marks  ·  ${q.source}`),L+14,y+2);y+=20;doc.setTextColor(30);
+      });
+      doc.save(fname+'.pdf');toast(`Exported ${rows.length} questions to PDF`);
+    }else{
+      const cells=r=>r.map(c=>`<td>${esc(c)}</td>`).join('');
+      document.getElementById('print-area').innerHTML=`<h1>${esc(b.name)} (${rows.length})</h1><table><tr>${header.map(h=>`<th>${h}</th>`).join('')}</tr>${data.map(r=>`<tr>${cells(r)}</tr>`).join('')}</table>`;
+      toast('Opening print dialog — choose Save as PDF');setTimeout(()=>window.print(),300);
+    }
+  }
+}
+
+/* ============ DASHBOARD + CHARTS ============ */
+function donutSVG(segments,total,big,small){
+  const size=150,th=22,r=(size-th)/2,C=2*Math.PI*r;let off=0,segs='';
+  segments.forEach(s=>{if(s.value>0){const len=s.value/total*C;segs+=`<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${th}" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${size/2} ${size/2})"/>`;off+=len;}});
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="${th}"/>${segs}<text x="50%" y="47%" text-anchor="middle" class="donut-center-big">${big}</text><text x="50%" y="61%" text-anchor="middle" class="donut-center-small">${small}</text></svg>`;
+}
+function renderDonutCard(elId,segments,centerLabel){
+  const el=document.getElementById(elId);const total=segments.reduce((s,x)=>s+x.value,0);
+  if(!total){el.innerHTML='<div class="chart-empty">No questions yet.<br>Add questions to see this chart.</div>';return;}
+  const legend=segments.map(s=>`<div class="li"><span class="sw" style="background:${s.color}"></span>${s.label}<span class="lv">${s.value} · ${Math.round(s.value/total*100)}%</span></div>`).join('');
+  el.innerHTML=`<div class="donut-wrap">${donutSVG(segments,total,total,centerLabel)}<div class="legend">${legend}</div></div>`;
+}
+function renderDashboard(){
+  const banks=myBanks();const qs=myQuestions();const ai=qs.filter(q=>q.source==='AI').length,man=qs.filter(q=>q.source==='Manual').length;
+  document.getElementById('k-banks').textContent=banks.length;
+  document.getElementById('k-questions').textContent=qs.length;
+  document.getElementById('k-ai').textContent=ai;
+  document.getElementById('k-manual').textContent=man;
+  const easy=qs.filter(q=>q.difficulty==='Easy').length,med=qs.filter(q=>q.difficulty==='Medium').length,hard=qs.filter(q=>q.difficulty==='Hard').length;
+  renderDonutCard('chart-difficulty',[{label:'Easy',value:easy,color:'#06C270'},{label:'Medium',value:med,color:'#3F41D1'},{label:'Hard',value:hard,color:'#E6393E'}],'questions');
+  renderDonutCard('chart-source',[{label:'AI generated',value:ai,color:'#E697AB'},{label:'Manually added',value:man,color:'#3F41D1'}],'questions');
+  const bySub={};qs.forEach(q=>{bySub[q.subject]=(bySub[q.subject]||0)+1;});
+  const subEl=document.getElementById('chart-subject');const subs=Object.entries(bySub).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if(!subs.length){subEl.innerHTML='<div class="chart-empty">No questions yet.<br>Add questions to see this chart.</div>';}
+  else{const max=subs[0][1];subEl.innerHTML='<div class="bars">'+subs.map(([s,n])=>`<div class="brow"><div class="bl"><span>${esc(s)}</span><b>${n}</b></div><div class="btrack"><i style="width:${Math.round(n/max*100)}%"></i></div></div>`).join('')+'</div>';}
+  const bb=document.getElementById('bank-bars');const ranked=banks.map(b=>({b,n:bankQs(b.id).length})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n).slice(0,6);
+  if(!ranked.length){bb.innerHTML='<div class="chart-empty">No questions yet.</div>';}
+  else{const max=ranked[0].n;bb.innerHTML=ranked.map(x=>`<div class="brow"><div class="bl"><span>${esc(x.b.name)}</span><b>${x.n}</b></div><div class="btrack"><i style="width:${Math.round(x.n/max*100)}%"></i></div></div>`).join('');}
+  const list=document.getElementById('activity-list');
+  const tick={create:'var(--primary)',accept:'var(--success)',reject:'var(--danger)',ai:'var(--accent)',manual:'var(--primary)'};
+  const who=state.role==='sysadmin'?SYS.name:(getAdmin(currentAdminId())||{}).fullName||'You';
+  list.innerHTML=state.activity.length?state.activity.slice(0,6).map(a=>`<li><span class="tick" style="background:${tick[a.kind]||'var(--text-3)'}"></span><div><div class="txt">${a.text}</div><div class="meta">${esc(who)} · ${a.time}</div></div></li>`).join(''):`<li style="border:none"><div class="txt" style="color:var(--text-3)">No activity yet. Create a question bank to get started.</div></li>`;
+}
+
+/* ============ RENDER ALL ============ */
+function renderAll(){populateCtx();renderAdmins();refreshDropdowns();renderMaster();renderDashboard();renderBankList();}
+</script>
+</body>
+</html>
